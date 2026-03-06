@@ -1,0 +1,52 @@
+/* Font */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+
+body {
+    font-family: 'Geist', sans-serif;
+    letter-spacing: -0.015em;
+    background-color: #F9FAFB;
+}
+
+/* Cards */
+.issues-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Tab buttons */
+.tab-btn {
+    padding: 8px 24px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4B5563;
+    transition: all 0.2s ease;
+    border: 1px solid #E5E7EB;
+    background: white;
+}
+
+.active-tab {
+    background-color: #4A00FF !important;
+    color: white !important;
+    border-color: #4A00FF !important;
+    box-shadow: 0 4px 12px rgba(74, 0, 255, 0.15);
+}
+
+/* Label highlight */
+.label-highlight {
+    background-color: #FDE68A;
+    color: #D97706;
+}
+
+/* Input Focus */
+.input-focus-style:focus {
+    box-shadow: 0 0 0 2px rgba(74, 0, 255, 0.1);
+    outline: none;
+    border-color: #4A00FF;
+}
+
+/* Loading Spinner */
+.loader {
+    border-top-color: #4A00FF;
+}
