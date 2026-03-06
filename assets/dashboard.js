@@ -28,16 +28,16 @@ function updateTabUI(activeStatus) {
     tabs.forEach(tab => {
         const btn = document.getElementById(`tab-${tab}`);
         if (btn) {
+            // We use px-8 to keep them consistently sized but not full-width
             if (tab === activeStatus) {
-                btn.className = "tab-btn active-tab px-5 py-2 rounded-lg font-bold transition-all bg-[#4A00FF] text-white";
+                btn.className = "tab-btn px-8 py-2.5 rounded-lg font-bold transition-all bg-[#4A00FF] text-white";
             } else {
-                btn.className = "tab-btn px-5 py-2 rounded-lg font-bold transition-all text-gray-500 hover:bg-gray-50";
+                btn.className = "tab-btn px-8 py-2.5 rounded-lg font-bold transition-all text-gray-500 hover:bg-gray-50";
             }
         }
     });
 }
 
-// Dashboard Cards' status
 function getPriorityStyle(priority) {
     const p = priority.toUpperCase();
     if (p === "HIGH") return "bg-[#FEECEC] text-[#EF4444]"; 
@@ -45,7 +45,6 @@ function getPriorityStyle(priority) {
     return "bg-[#F3F4F6] text-[#6B7280] border border-gray-200";
 }
 
-// Status Styles for the Modal cards
 function getModalPriorityStyle(priority) {
     const p = priority.toUpperCase();
     if (p === "HIGH") return "bg-[#EF4444] text-white border-none"; 
@@ -67,8 +66,6 @@ async function showModal(issueSnippet) {
 
         const isOpen = issue.status.toLowerCase() === 'open';
         const statusBadge = isOpen ? 'bg-[#00BA71]' : 'bg-[#6366F1]';
-        
-        // Modal card's style
         const modalPriorityStyle = getModalPriorityStyle(issue.priority);
 
         content.innerHTML = `
@@ -131,7 +128,7 @@ function updateIssueHeader(count) {
     if (countText) {
         countText.innerHTML = `
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-indigo-50 rounded-lg">
+                <div class="p-2 bg-indigo-50 rounded-full">
                     <img src="Aperture.png" alt="Icon" class="w-6 h-6 object-contain">
                 </div>
                 <div>
