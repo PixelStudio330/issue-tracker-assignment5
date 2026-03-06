@@ -115,7 +115,7 @@ function updateIssueHeader(count) {
     }
 }
 
-// Rendering
+// Rendering other functions
 function renderIssues(issues) {
     const container = document.getElementById('issuesContainer');
     container.innerHTML = '';
