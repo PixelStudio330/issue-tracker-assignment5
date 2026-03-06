@@ -1,4 +1,61 @@
 let allIssues = [];
+let currentSearchQuery = ""; 
+let activeStatusFilter = "all";
+
+// Search Function 
+async function searchIssues(query) {
+    currentSearchQuery = query;
+    const container = document.getElementById('issuesContainer');
+    
+    // If query is empty just revert to showing the cached allIssues
+    if (!query.trim()) {
+        filterIssues(activeStatusFilter);
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://phi-lab-server.vercel.app/api/v1/lab/issues/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        const searchResults = data.data;
+
+        // Apply the current tab filter to the search results
+        let filteredResults = activeStatusFilter === 'all' 
+            ? searchResults 
+            : searchResults.filter(issue => issue.status.toLowerCase() === activeStatusFilter.toLowerCase());
+
+        updateIssueHeader(filteredResults.length);
+        renderIssues(filteredResults);
+    } catch (error) {
+        console.error("Search error:", error);
+        container.innerHTML = `<p class="col-span-full text-center py-10 text-red-400">Error searching issues.</p>`;
+    }
+}
+
+// preventing api spam
+let searchTimeout;
+function handleSearchInput(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchIssues(e.target.value);
+    }, 400); 
+}
+
+// Updated filterIssues to handle search state
+function filterIssues(status) {
+    activeStatusFilter = status;
+    
+    // If there is an active search we re run the search to keep results accurate
+    if (currentSearchQuery) {
+        searchIssues(currentSearchQuery);
+    } else {
+        let filtered = status === 'all' ? allIssues : allIssues.filter(issue => issue.status.toLowerCase() === status.toLowerCase());
+        updateIssueHeader(filtered.length);
+        renderIssues(filtered);
+    }
+    updateTabUI(status);
+}
+
+// Rest of the functions 
 
 async function fetchIssues() {
     const loader = document.getElementById('loader');
@@ -10,17 +67,11 @@ async function fetchIssues() {
         renderIssues(allIssues);
     } catch (error) {
         console.error("Fetch error:", error);
-        document.getElementById('issuesContainer').innerHTML = `<p class="col-span-full text-center py-10 text-red-400">Error loading data.</p>`;
+        const container = document.getElementById('issuesContainer');
+        if(container) container.innerHTML = `<p class="col-span-full text-center py-10 text-red-400">Error loading data.</p>`;
     } finally {
         if (loader) loader.classList.add('hidden');
     }
-}
-
-function filterIssues(status) {
-    let filtered = status === 'all' ? allIssues : allIssues.filter(issue => issue.status.toLowerCase() === status.toLowerCase());
-    updateIssueHeader(filtered.length);
-    renderIssues(filtered);
-    updateTabUI(status);
 }
 
 function updateTabUI(activeStatus) {
@@ -28,7 +79,6 @@ function updateTabUI(activeStatus) {
     tabs.forEach(tab => {
         const btn = document.getElementById(`tab-${tab}`);
         if (btn) {
-            // We use px-8 to keep them consistently sized but not full-width
             if (tab === activeStatus) {
                 btn.className = "tab-btn px-8 py-2.5 rounded-lg font-bold transition-all bg-[#4A00FF] text-white";
             } else {
@@ -55,7 +105,6 @@ function getModalPriorityStyle(priority) {
 async function showModal(issueSnippet) {
     const modal = document.getElementById('issueModal');
     const content = document.getElementById('modalContent');
-    
     content.innerHTML = `<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-[#4A00FF]"></span></div>`;
     modal.showModal();
 
@@ -69,7 +118,7 @@ async function showModal(issueSnippet) {
         const modalPriorityStyle = getModalPriorityStyle(issue.priority);
 
         content.innerHTML = `
-            <div class="space-y-6">
+            <div class="space-y-6 text-left">
                 <div>
                     <h2 class="text-3xl font-extrabold text-[#1F2937] mb-3">${issue.title}</h2>
                     <div class="flex items-center gap-2 text-sm text-gray-500 font-medium">
@@ -79,7 +128,6 @@ async function showModal(issueSnippet) {
                         <span>• Opened by <span class="text-gray-700 font-semibold">${issue.author}</span> • ${new Date(issue.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
-
                 <div class="flex gap-2">
                     <span class="bg-[#FFF1F2] text-[#E11D48] text-[11px] px-3 py-1 rounded-full font-bold border border-[#FECDD3] flex items-center gap-1">
                         <i class="fa-solid fa-bug text-[10px]"></i> BUG
@@ -88,27 +136,22 @@ async function showModal(issueSnippet) {
                         <i class="fa-solid fa-life-ring text-[10px]"></i> HELP WANTED
                     </span>
                 </div>
-
                 <div class="text-[#4B5563] text-lg leading-relaxed py-2">
                     ${issue.description}
                 </div>
-
                 <div class="bg-[#F9FAFB] rounded-2xl p-6 flex items-center border border-gray-100">
                     <div class="flex-1 space-y-1">
                         <p class="text-[12px] font-bold text-gray-400 uppercase tracking-tight">Assignee:</p>
                         <p class="text-[#111827] font-extrabold text-xl">${issue.author}</p>
                     </div>
-                    
                     <div class="flex-1 flex flex-col items-center space-y-2">
                         <p class="text-[12px] font-bold text-gray-400 uppercase tracking-tight">Priority:</p>
                         <span class="px-5 py-1.5 rounded-full text-[12px] font-black uppercase ${modalPriorityStyle}">
                             ${issue.priority}
                         </span>
                     </div>
-
                     <div class="flex-1"></div> 
                 </div>
-
                 <div class="flex justify-end pt-2">
                     <form method="dialog">
                         <button class="bg-[#4A00FF] hover:bg-indigo-700 text-white px-10 py-3 rounded-xl font-bold text-sm transition-all shadow-lg active:scale-95">
@@ -144,6 +187,11 @@ function renderIssues(issues) {
     const container = document.getElementById('issuesContainer');
     container.innerHTML = '';
 
+    if (issues.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center py-20 text-gray-400 font-medium">No issues found matching your criteria.</p>`;
+        return;
+    }
+
     issues.forEach(issue => {
         const isOpen = issue.status.toLowerCase() === 'open';
         const topBorder = isOpen ? 'border-t-[#10B981]' : 'border-t-[#8B5CF6]';
@@ -155,7 +203,7 @@ function renderIssues(issues) {
         card.onclick = () => showModal(issue);
 
         card.innerHTML = `
-            <div>
+            <div class="text-left">
                 <div class="flex justify-between items-center mb-6">
                     <div class="w-6 h-6"><img src="${statusIcon}" class="w-full h-full object-contain opacity-80"></div>
                     <span class="text-[10px] font-bold uppercase px-3 py-1 rounded-full ${priorityStyle}">${issue.priority}</span>
@@ -167,7 +215,7 @@ function renderIssues(issues) {
                     <span class="flex items-center gap-1 bg-[#FFFBEB] text-[#D97706] text-[10px] px-3 py-1 rounded-full font-bold border border-[#FEF3C7]"><i class="fa-solid fa-life-ring"></i> HELP WANTED</span>
                 </div>
             </div>
-            <div class="border-t border-gray-100 pt-5 mt-auto">
+            <div class="border-t border-gray-100 pt-5 mt-auto text-left">
                 <p class="text-gray-400 text-[11px] font-bold tracking-tight mb-0.5">#${issue.id.toString().slice(-4)} by ${issue.author}</p>
                 <p class="text-gray-400 text-[10px] font-medium">${new Date(issue.createdAt).toLocaleDateString()}</p>
             </div>
@@ -176,4 +224,5 @@ function renderIssues(issues) {
     });
 }
 
+// Initial fetch
 fetchIssues();
