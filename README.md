@@ -18,4 +18,9 @@ It does not return a new array. It is mainly used when the goal is simply to per
 filter() is used to create a new array that contains only the elements that meet a specific condition. 
 Elements that do not satisfy the condition are excluded.
 
- 
+ 4️⃣ What is an arrow function?
+Ans: An arrow function is a shorter way to write functions in JS. 
+It was introduced in ES6 and uses the "=>" syntax to define a function.
+
+5️⃣ What are template literals?
+Ans: Template literals are a way of writing strings in JS using backticks (` `) instead of quotation marks. They allow variables and expressions to be inserted directly inside a string using the ${} syntax. This makes it easier to include values inside text without using traditional string concatenation. Template literals also allow multi line strings to be written more naturally.
